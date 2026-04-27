@@ -1,5 +1,7 @@
 package com.smartbudget.authservice.service;
 
+import com.smartbudget.authservice.dto.AuthResponse;
+import com.smartbudget.authservice.dto.LoginRequest;
 import com.smartbudget.authservice.dto.RegisterRequest;
 import com.smartbudget.authservice.dto.UserDto;
 import com.smartbudget.authservice.entity.User;
@@ -14,6 +16,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public UserDto register(RegisterRequest request) {
         User user = new User();
@@ -23,6 +26,19 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         return mapToDto(userRepository.save(user));
+    }
+
+    public AuthResponse login(LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if(!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Wrong password");
+        }
+
+        String token = jwtService.generateToken(user);
+
+        return new AuthResponse(token);
     }
 
     private UserDto mapToDto(User user) {

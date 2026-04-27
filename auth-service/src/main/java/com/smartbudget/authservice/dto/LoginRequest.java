@@ -1,16 +1,14 @@
 package com.smartbudget.authservice.dto;
 
-import jakarta.validation.constraints.NotBlank;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class RegisterRequest {
-
+public class LoginRequest {
     @NotBlank
-    private String username;
-
-    @NotBlank
+    @Email
     private String email;
 
     @NotBlank
