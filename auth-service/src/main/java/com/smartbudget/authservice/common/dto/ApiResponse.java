@@ -1,5 +1,9 @@
 package com.smartbudget.authservice.common.dto;
 
+
+import lombok.Data;
+
+@Data
 public class ApiResponse<T> {
     private T data;
     private ApiError error;
