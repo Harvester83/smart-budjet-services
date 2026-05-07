@@ -14,7 +14,6 @@ public class JwtService {
 
     private final String SECRET = "my-super-secret-key-my-super-secret-key";
 
-    // ✅ создаём ключ из строки
     private final SecretKey key = Keys.hmacShaKeyFor(
             SECRET.getBytes(StandardCharsets.UTF_8)
     );
