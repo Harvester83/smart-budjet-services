@@ -3,12 +3,14 @@ package com.smartbudget.authservice.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartbudget.authservice.dto.AuthResponse;
 import com.smartbudget.authservice.dto.LoginRequest;
+import com.smartbudget.authservice.exception.NotFoundException;
 import com.smartbudget.authservice.service.AuthService;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -29,23 +31,20 @@ class AuthControllerTest {
     @MockitoBean
     private AuthService authService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void shouldLoginSuccessfully() throws Exception {
 
-        // Arrange
         LoginRequest request = new LoginRequest();
         request.setEmail("test@example.com");
         request.setPassword("123456");
 
         AuthResponse response = new AuthResponse("fake-jwt-token");
 
-        when(authService.login(request))
+        when(authService.login(any(LoginRequest.class)))
                 .thenReturn(response);
 
-        // Act & Assert
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -53,6 +52,28 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.data.token")
                         .value("fake-jwt-token"))
                 .andExpect(jsonPath("$.error")
-                        .doesNotExist());
+                        .value(Matchers.nullValue()));
+    }
+
+    @Test
+    void shouldReturnErrorWhenCredentialsInvalid() throws Exception {
+
+        LoginRequest request = new LoginRequest();
+        request.setEmail("wrong@example.com");
+        request.setPassword("wrong-password");
+
+        when(authService.login(any(LoginRequest.class)))
+                .thenThrow(new NotFoundException("Invalid email or password"));
+
+        mockMvc.perform(post("/api/auth/login2")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.data")
+                        .value(Matchers.nullValue()))
+                .andExpect(jsonPath("$.error.code")
+                        .value("NOT_FOUND"))
+                .andExpect(jsonPath("$.error.message")
+                        .value("Invalid email or password"));
     }
 }
