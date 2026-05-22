@@ -1,4 +1,4 @@
-package com.smartbudget.authservice.config;
+package com.smartbudget.authservice.security;
 
 
 import org.springframework.context.annotation.Bean;
@@ -19,14 +19,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http
-                .csrf(csrf -> csrf.disable());// ✅ новый синтаксис
+        http.csrf(csrf -> csrf.disable());
 
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/auth/**").permitAll()
-//                        .requestMatchers("/users").permitAll()
-//                        .anyRequest().authenticated()
-//                );
 
         return http.build();
     }

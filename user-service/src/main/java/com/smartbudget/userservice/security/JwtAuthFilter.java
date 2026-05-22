@@ -4,6 +4,7 @@ package com.smartbudget.userservice.security;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -38,12 +39,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
         String email = jwtService.extractEmail(token);
+        Long userId = jwtService.extractUserId(token);
 
         UsernamePasswordAuthenticationToken authToken =
                 new UsernamePasswordAuthenticationToken(email, null, List.of());
 
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
-        filterChain.doFilter(request, response);
+        // ↓ оборачиваем request, чтобы контроллер получил X-User-Id из токена
+        HttpServletRequest mutatedRequest = new HttpServletRequestWrapper(request) {
+            @Override
+            public String getHeader(String name) {
+                if ("X-User-Id".equals(name)) return String.valueOf(userId);
+                return super.getHeader(name);
+            }
+        };
+
+        filterChain.doFilter(mutatedRequest, response);
     }
 }

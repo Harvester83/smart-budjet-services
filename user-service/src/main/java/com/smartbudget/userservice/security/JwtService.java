@@ -17,6 +17,12 @@ public class JwtService {
             SECRET.getBytes(StandardCharsets.UTF_8)
     );
 
+    public Long extractUserId(String token) {
+        Claims claims = Jwts.parser().verifyWith(key).build()
+                .parseSignedClaims(token).getPayload();
+        return claims.get("userId", Long.class);
+    }
+
     public String extractEmail(String token) {
         Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
 
