@@ -20,6 +20,10 @@ public class AuthService {
     private final JwtService jwtService;
 
     public UserDto register(RegisterRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+
         User user = new User();
 
         user.setUsername(request.getUsername());

@@ -59,12 +59,13 @@ docker compose up --build
 - Services do **not** call each other at runtime; the JWT carries cross-service identity
 
 ### Key Patterns
-- **JWT library**: JJWT 0.12.5 — `JwtService` in each service handles token operations (auth-service generates, user-service validates)
+- **JWT library**: JJWT 0.12.5 — `JwtService` in each service handles token operations (auth-service generates, user-service validates). **Both services hardcode the identical secret string** — if you change it in one, auth silently breaks in the other.
+- **`X-User-Id` header**: Synthesized by `JwtAuthFilter` via `HttpServletRequestWrapper`; it is never trusted from the client. Controllers read it to get the caller's identity.
 - **Response envelope**: All REST responses use `ApiResponse<T>` wrapper; errors use `ApiError`, handled by `GlobalExceptionHandler`
 - **Security**: Spring Security with BCrypt password hashing; CORS allows `http://localhost:3000`; CSRF disabled
 - **ORM**: JPA/Hibernate with `ddl-auto: update` — schema is managed automatically, no migrations
 
 ### Known Issues (from initial setup)
-- JWT secret key is hardcoded in `JwtService`; should be externalized to an environment variable
+- JWT secret is hardcoded in both `JwtService` classes; should be a shared environment variable
 - `user-service/Dockerfile` exposes port 8080 and references the auth-service JAR — needs correction to port 8081 and the user-service JAR
 - Local `application.yml` files contain hardcoded DB credentials; Docker Compose overrides these via environment variables
